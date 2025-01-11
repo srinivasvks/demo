@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Form - YLP Toastmasters Club</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+        }
+        nav ul {
+            list-style-type: none;
+        }
+        nav ul li {
+            display: inline;
+            margin-right: 20px;
+        }
+        nav ul li:hover {
+            text-decoration: underline;
+        }
+        .enroll-box {
+            background-color: skyblue;
+            color: black;
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 2px solid black;
+            border-radius: 4px;
+        }
+        .enroll-box:hover {
+            background-color: #5bb9f4; /* Slightly darker shade on hover */
+        }
+        nav ul li a {
+            color: black;
+            text-decoration: none;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+        }
+        input, textarea, button {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            max-height: 300px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+            padding: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .note {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+        .success {
+            color: green;
+            font-size: 1.1em;
+        }
+    </style>
+    <script>
+        function validateEmail(email) {
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        let loadingInterval; // To track the loading animation interval
+
+        function showLoading() {
+            const successDiv = document.getElementById('success-message');
+            const errorDiv = document.getElementById('error-message');
+            let symbols = ['|', '/', '—', '\\'];
+            let i = 0;
+
+            // Clear existing messages and display loading
+            successDiv.innerHTML = "";
+            errorDiv.innerHTML = "Sending email... ";
+            
+            loadingInterval = setInterval(() => {
+                errorDiv.innerHTML = "Sending email... " + symbols[i];
+                i = (i + 1) % symbols.length;
+            }, 200);
+        }
+
+        function hideLoading() {
+            clearInterval(loadingInterval); // Stop the loading animation
+        }
+
+        function sendEmail(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Get values from the form
+            var senderName = document.getElementById('sender-name').value.trim();
+            var senderEmail = document.getElementById('sender-email').value;
+            var subject = document.getElementById('email-subject').value.trim();
+            var body = document.getElementById('email-body').value.trim();
+            var errorMsg = "";
+
+            // Validation for subject (must be more than 2 letters)
+            if (senderName.length <= 2) {
+                errorMsg += "Name must contain more than 2 letters.<br>";
+            }
+            
+            // Validation for sender's email
+            if (!validateEmail(senderEmail)) {
+                errorMsg += "Invalid sender's email.<br>";
+            }
+
+            // Validation for subject (must be more than 2 words)
+            if (subject.split(" ").length <= 2) {
+                errorMsg += "Subject must contain more than 2 words.<br>";
+            }
+
+            // Validation for body (must be more than 15 words and contain the user's name)
+            const wordCount = body.split(" ").length;
+            
+            if (wordCount <= 15) {
+                errorMsg += "Message body must contain more than 15 words.<br>";
+            } 
+            // else if (!body.toLowerCase().includes("name")) {
+            //     errorMsg += "Please include your name in the body of the email.<br>";
+            // }
+
+            // Display error or success message
+            var errorDiv = document.getElementById('error-message');
+            var successDiv = document.getElementById('success-message');
+            errorDiv.innerHTML = "";
+            successDiv.innerHTML = "";
+
+            if (errorMsg) {
+                errorDiv.innerHTML = errorMsg;
+            } else {
+                // Start loading animation
+                showLoading();
+
+                // Send the email
+
+                // Desktop working
+                // fetch('http://localhost:3000/send-email', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json'
+                //     },
+                //     body: JSON.stringify({
+                //         senderName: senderName,
+                //         senderEmail: senderEmail,
+                //         subject: subject,
+                //         body: body
+                //     })
+                // })
+                // .then(response => response.text())
+                // .then(data => {
+                //     hideLoading(); // Stop the loading animation
+                //     errorDiv.innerHTML = ""; // Clear loading message
+                //     successDiv.innerHTML = data; // Show success message from server
+                // })
+                // .catch(error => {
+                //     hideLoading(); // Stop the loading animation
+                //     successDiv.innerHTML = ""; // Clear success message
+                //     errorDiv.innerHTML = "Error: " + error; // Show error message from server
+                // });
+
+                // New version
+                fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderName: senderName,
+                        senderEmail: senderEmail,
+                        subject: subject,
+                        body: body
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    hideLoading(); // Stop the loading animation
+                    errorDiv.innerHTML = ""; // Clear loading message
+                    successDiv.innerHTML = data; // Show success message from server
+                })
+                .catch(error => {
+                    hideLoading(); // Stop the loading animation
+                    successDiv.innerHTML = ""; // Clear success message
+                    errorDiv.innerHTML = `Error: ${error.message}`; // Show error message
+                });
+            }
+        }
+
+        //counters
+        // document.addEventListener("DOMContentLoaded", () => {
+        // const allTimeCounterKey = "allTimeVisitorCounter";
+        // const monthlyCounterKey = "monthlyVisitorCounter";
+        // const lastMonthKey = "lastVisitedMonth";
+        // const isFirstVisitKey = "hasVisitedThisSession";
+
+        // const now = new Date();
+        // const currentMonth = now.getMonth();
+        // const currentYear = now.getFullYear();
+
+        // // Get counters from local storage
+        // let allTimeCounter = parseInt(localStorage.getItem(allTimeCounterKey)) || 0;
+        // let monthlyCounter = parseInt(localStorage.getItem(monthlyCounterKey)) || 0;
+        // const lastVisitedMonth = parseInt(localStorage.getItem(lastMonthKey));
+
+        // // Check if it's a new month
+        // if (lastVisitedMonth !== currentMonth || !lastVisitedMonth) {
+        //     monthlyCounter = 0; // Reset the monthly counter for a new month
+        //     localStorage.setItem(lastMonthKey, currentMonth);
+        // }
+
+        // // Check if the user has visited before in this session
+        // if (!sessionStorage.getItem(isFirstVisitKey)) {
+        //     allTimeCounter++; // Increment the all-time counter
+        //     monthlyCounter++; // Increment the monthly counter
+        //     localStorage.setItem(allTimeCounterKey, allTimeCounter); // Update local storage
+        //     localStorage.setItem(monthlyCounterKey, monthlyCounter); // Update local storage
+        //     sessionStorage.setItem(isFirstVisitKey, "true"); // Mark as visited for this session
+        // }
+
+        // Display the monthly visitor count on the page
+    //     const visitorCounterElement = document.getElementById("visitor-counter");
+    //     if (visitorCounterElement) {
+    //         visitorCounterElement.textContent = `Total Visitors This Month: ${monthlyCounter}`;
+    //     }
+    // });
+    </script>
+</head>
+<body>
+    <header>
+        <img src="/pics/logo1.png" alt="YLP Logo" width="100">
+        <h1>YLP Toastmasters Club - District 18 Division E Area 53</h1>
+        <a href="email.html" class="enroll-box">Enroll/Clarify your Queries</a>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li style="text-decoration: none;"> | </li>
+            <li><a href="members.html">Current Board Members</a></li>
+            <li style="text-decoration: none;"> | </li>
+            <li><a href="agendas.html">Club Activities and Agendas</a></li>
+            <!-- <li><a href="email.html">Enroll/Clarify your Queries</a></li> -->
+            <!-- <li style="text-decoration: none;"> | </li>
+            <li><a id="visitor-counter">Total Visitors This Month: 0</a></li> -->
+        </ul>
+    </nav>
+
+    <h2>Enroll/Clarify your Queries</h2>
+
+    <form id="contact-form" onsubmit="sendEmail(event)">
+        <label for="receiver-email">Receiver's Email (Fixed)</label>
+        <input type="email" id="receiver-email" value="ylp2425dis18divearea53@gmail.com" disabled> 
+
+        <label for="sender-name">Your Name</label>
+        <input type="text" id="sender-name" placeholder="Enter your name" required>
+
+        <label for="sender-email">Your Email</label>
+        <input type="email" id="sender-email" placeholder="Enter your email" required>
+
+        <label for="email-subject">Subject</label>
+        <input type="text" id="email-subject" placeholder="Enter the subject" required>
+
+        <label for="email-body">Message</label>
+        <textarea id="email-body" placeholder="Enter your message (minimum 15 words)..." rows="4" required></textarea>
+        <!-- <textarea id="email-body" placeholder="Enter your message (Don't forget to add your name! Eg: Name : {your name})..." rows="4" required></textarea> -->
+
+        <!-- <p class="note">Note: Please include your name in the message body.</p> -->
+        <p class="note">You can check the status after clicking 'Send Email' button at the bottom left corner after scrolling down.</p>
+
+        <button type="submit">Send Email</button>
+    </form>
+
+    <div id="error-message" class="error"></div>
+    <div id="success-message" class="success"></div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Form - YLP Toastmasters Club</title>
+    <style>
+        
+    </style>
+    <script>
+        function validateEmail(email) {
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function sendEmail(event) {
+            event.preventDefault(); // Prevent form submission
+
+            var senderName = document.getElementById('user-name').value.trim();
+            var senderEmail = document.getElementById('sender-email').value.trim();
+            var subject = document.getElementById('email-subject').value.trim();
+            var body = document.getElementById('email-body').value.trim();
+
+            var errorDiv = document.getElementById('error-message');
+            var successDiv = document.getElementById('success-message');
+            var loadingDiv = document.getElementById('loading-message');
+            var sendButton = document.querySelector('button[type="submit"]');
+
+            errorDiv.innerHTML = "";
+            successDiv.innerHTML = "";
+            loadingDiv.innerHTML = "";
+
+            if (!validateEmail(senderEmail)) {
+                errorDiv.innerHTML = "Invalid email address.";
+                return;
+            }
+
+            if (senderName.length <= 2) {
+                errorDiv.innerHTML = "Name must contain more than 2 letters.";
+                return;
+            }
+
+            if (subject.split(" ").length <= 2) {
+                errorDiv.innerHTML = "Subject must contain more than 2 words.";
+                return;
+            }
+
+            if (body.split(" ").length <= 15) {
+                errorDiv.innerHTML = "Message body must contain more than 15 words.";
+                return;
+            }
+
+            var finalBody = `Name: ${senderName}\n\n${body}`;
+            console.log("Final Body Sent:", finalBody);
+
+            // Disable the button and start loading animation
+            sendButton.disabled = true;
+            let symbols = ["|", "\\", "__", "/"];
+            let index = 0;
+
+            // Start loading animation
+            let loadingInterval = setInterval(() => {
+                loadingDiv.textContent = `Sending... ${symbols[index]}`;
+                index = (index + 1) % symbols.length;
+            }, 200);
+
+            fetch('http://localhost:3000/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderEmail: senderEmail,
+                    subject: subject,
+                    finalBody: finalBody
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                clearInterval(loadingInterval); // Stop loading animation
+                loadingDiv.innerHTML = ""; // Clear loading text
+                successDiv.innerHTML = data; // Show success message
+            })
+            .catch(error => {
+                clearInterval(loadingInterval); // Stop loading animation
+                loadingDiv.innerHTML = ""; // Clear loading text
+                errorDiv.innerHTML = "Error: " + error;
+            })
+            .finally(() => {
+                sendButton.disabled = false; // Re-enable the button
+            });
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <img src="D:\Toast\Website\code\ylp-email-project\pics\logo1.png" alt="YLP Logo" width="100">
+        <h1>YLP Toastmasters Club - District 18 Division E Area 53</h1>
+        <a href="email.html" class="enroll-box">Enroll/Clarify your Queries</a>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li style="text-decoration: none;"> | </li>
+            <li><a href="members.html">Current Board Members</a></li>
+            <li style="text-decoration: none;"> | </li>
+            <li><a href="agendas.html">Club Activities and Agendas</a></li>
+            <li><a href="email.html">Enroll/Clarify your Queries</a></li>
+        </ul>
+    </nav>
+    <h2>Enroll/Clarify your Queries</h2>
+
+    <form id="contact-form" onsubmit="sendEmail(event)">
+        <label for="receiver-email">Receiver's Email (Fixed)</label>
+        <input type="email" id="receiver-email" value="ylp2425dis18divearea53@gmail.com" disabled>
+
+        <label for="user-name">Your Name</label>
+        <input type="text" id="user-name" placeholder="Enter your name" required>
+
+        <label for="sender-email">Your Email</label>
+        <input type="email" id="sender-email" placeholder="Enter your email" required>
+
+        <label for="email-subject">Subject</label>
+        <input type="text" id="email-subject" placeholder="Enter the subject" required>
+
+        <label for="email-body">Message</label>
+        <textarea id="email-body" placeholder="Enter your message (Don't forget to add your name! Eg: Name : {your name})..." rows="4" required></textarea>
+
+        <p class="note">Note: Please include your name in the message body.</p> 
+        <p class="note">You can check the status after clicking 'Send Email' button at the bottom left corner after scrolling down.</p>
+
+        <button type="submit">Send Email</button>
+    </form>
+
+    <div id="error-message" class="error"></div>
+    <div id="success-message" class="success"></div>
+    <div id="loading-message" class="loading"></div>
+</body>
+</html>-->

@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/send-email.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "home.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "email.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "members.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "agendas.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/send-email",
+      "dest": "api/send-email.js"
+    },
+    {
+      "src": "/",
+      "dest": "home.html"
+    },
+    {
+      "src": "/email",
+      "dest": "email.html"
+    },
+    {
+      "src": "/members",
+      "dest": "members.html"
+    },
+    {
+      "src": "/agendas",
+      "dest": "agendas.html"
+    },
+    {
+      "src": "/pics/(.*)",
+      "dest": "/public/pics/$1"
+    }
+  ]
+}
